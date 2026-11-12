@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gaji & Komitmen">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23059669'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='76' fill='white'%3ERM%3C/text%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23059669'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='76' fill='white'%3ERM%3C/text%3E%3C/svg%3E">
+    <title>Salary & Commitment Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+        }
+        /* Hilangkan spinner pada input nombor */
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        .paid-card-box {
+            background-color: #dcfce7 !important;
+            border-color: #22c55e !important;
+            color: #14532d !important;
+        }
+        .dark .paid-card-box {
+            background-color: rgba(22, 163, 74, 0.25) !important;
+            border-color: #22c55e !important;
+            color: #86efac !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen pb-24 transition-colors duration-200">
+
+    <!-- TOAST NOTIFIKASI SIMPAN -->
+    <div id="saveToast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden bg-slate-900 dark:bg-emerald-600 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg border border-slate-700 dark:border-emerald-400 flex items-center gap-2 transition-all">
+        <span>✔</span>
+        <span id="saveToastText">Rekod berjaya disimpan!</span>
+    </div>
+
+    <!-- HEADER STICKY -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 py-3 shadow-sm">
+        <div class="max-w-lg mx-auto flex items-center justify-between gap-2">
+            <div class="min-w-0">
+                <h1 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2 truncate">
+                    <span class="bg-emerald-600 text-white px-2 py-0.5 rounded-lg text-xs font-extrabold shrink-0">RM</span>
+                    <span class="truncate">Salary & Commitment</span>
+                </h1>
+                <p id="saveStatusSubtitle" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium truncate">
+                    ● Sedia untuk simpan
+                </p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <!-- Butang Simpan Manual -->
+                <button type="button" onclick="manualSaveAction()" class="px-3 py-2 text-xs font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm active:scale-95 transition flex items-center gap-1">
+                    <span>💾</span>
+                    <span>Save</span>
+                </button>
+                <!-- Butang Backup / Data -->
+                <button type="button" onclick="openBackupModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 active:scale-95 transition" title="Backup & Restore Data">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </button>
+                <!-- Butang Tema -->
+                <button type="button" id="themeToggle" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 active:scale-95 transition" title="Tukar Tema">
+                    <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- KANDUNGAN UTAMA -->
+    <main class="max-w-lg mx-auto px-3 pt-3.5 space-y-4">
+
+        <!-- BANNER AMARAN JIKA STORAN PELAYAR DISEKAT (PREVIEW / SANDBOX) -->
+        <div id="storageWarningBanner" class="hidden bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/70 rounded-2xl p-3 text-xs text-amber-900 dark:text-amber-200 flex items-start justify-between gap-2">
+            <div>
+                <strong class="block font-extrabold">⚠️ Mod Preview / Storan Terhad</strong>
+                <span class="text-[11px] opacity-90">Pelayar ini tidak membenarkan simpanan kekal automatik. Tekan ikon <b>Muat Turun (Backup)</b> di atas untuk simpan fail rekod ke telefon anda.</span>
+            </div>
+            <button type="button" onclick="openBackupModal()" class="shrink-0 bg-amber-600 text-white font-bold px-2.5 py-1.5 rounded-xl text-[11px]">Backup</button>
+        </div>
+
+        <!-- KAD RINGKASAN ATAS -->
+        <section class="grid grid-cols-3 gap-2">
+            <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <span class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Net Salary</span>
+                <div id="topNetSalary" class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white mt-0.5 truncate">RM 4,125.28</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <span class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Komitmen Anda</span>
+                <div id="topMyCommitment" class="text-xs sm:text-sm font-extrabold text-rose-600 dark:text-rose-400 mt-0.5 truncate">RM 3,391.01</div>
+            </div>
+            <div class="bg-emerald-600 dark:bg-emerald-700 p-2.5 rounded-2xl text-white shadow-sm">
+                <span class="block text-[10px] font-semibold text-emerald-100">Balance</span>
+                <div id="topBalance" class="text-xs sm:text-sm font-extrabold mt-0.5 truncate">RM 734.27</div>
+            </div>
+        </section>
+
+        <!-- NAVIGASI 3 TAB UTAMA -->
+        <nav class="grid grid-cols-3 bg-slate-200/90 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 gap-1">
+            <button type="button" onclick="switchTab('main')" id="tabBtnMain" class="py-2.5 px-1 text-xs font-extrabold rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm transition text-center">
+                📊 Utama
+            </button>
+            <button type="button" onclick="switchTab('ot')" id="tabBtnOt" class="py-2.5 px-1 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 transition flex items-center justify-center gap-1">
+                ⏱️ Log OT
+                <span id="badgeOtHours" class="bg-emerald-100 dark:bg-emerald-900/70 text-emerald-700 dark:text-emerald-300 text-[10px] px-1.5 py-0.5 rounded-full font-bold">30j</span>
+            </button>
+            <button type="button" onclick="switchTab('daycare')" id="tabBtnDaycare" class="py-2.5 px-1 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 transition flex items-center justify-center gap-1">
+                🧸 Daycare
+                <span id="badgeDaycareTotal" class="bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 text-[10px] px-1.5 py-0.5 rounded-full font-bold">714</span>
+            </button>
+        </nav>
+
+        <!-- ========================================================= -->
+        <!-- TAB 1: UTAMA (GAJI, TAX PCB & KOMITMEN)                   -->
+        <!-- ========================================================= -->
+        <div id="viewMain" class="space-y-4">
+
+            <!-- SEKSYEN A: SALARY -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <h2 class="font-extrabold text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400">1. Salary (Pendapatan)</h2>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer bg-amber-100/80 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-700/70 px-2.5 py-1 rounded-xl">
+                        <input type="checkbox" id="toggleBonusMonth" onchange="toggleBonusMode(this.checked)" class="w-3.5 h-3.5 accent-amber-600 rounded">
+                        <span class="text-[11px] font-bold text-amber-900 dark:text-amber-300">Bulan Bonus (Jan)</span>
+                    </label>
+                </div>
+
+                <div class="p-3.5 space-y-2.5">
+                    <!-- Basic -->
+                    <div class="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Basic</span>
+                        <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-xs text-slate-400 font-semibold">RM</span>
+                            <input type="number" step="0.01" inputmode="decimal" id="inputBasic" onchange="updateSalaryInputs()" onblur="formatInput2Dec(this)" class="w-24 text-right font-bold text-sm bg-transparent focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Baris Bonus -->
+                    <div id="bonusRow" class="hidden flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+                        <div>
+                            <span class="block text-xs font-bold text-amber-900 dark:text-amber-300">Bonus Januari (1x Basic)</span>
+                            <span class="block text-[10px] text-amber-700 dark:text-amber-400">Auto-kira potongan EPF 11% & PCB Bonus</span>
+                        </div>
+                        <span id="displayBonusVal" class="font-extrabold text-sm text-amber-800 dark:text-amber-300">RM 3,909.00</span>
+                    </div>
+
+                    <!-- Incentive -->
+                    <div class="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Incentive</span>
+                        <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-xs text-slate-400 font-semibold">RM</span>
+                            <input type="number" step="0.01" inputmode="decimal" id="inputIncentive" onchange="updateSalaryInputs()" onblur="formatInput2Dec(this)" class="w-24 text-right font-bold text-sm bg-transparent focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- OT -->
+                    <div class="flex items-center justify-between py-1">
+                        <div>
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">OT</span>
+                            <button type="button" onclick="switchTab('ot')" class="block text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                                Log OT Harian →
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1 bg-emerald-50/70 dark:bg-emerald-950/30 px-2.5 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
+                            <span class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">RM</span>
+                            <input type="number" step="0.01" inputmode="decimal" id="inputOtMain" onchange="overrideOtMain(this.value)" onblur="formatInput2Dec(this)" class="w-24 text-right font-extrabold text-sm text-emerald-700 dark:text-emerald-300 bg-transparent focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Gross Income -->
+                    <div class="flex items-center justify-between font-extrabold text-sm bg-sky-50 dark:bg-sky-950/50 text-sky-900 dark:text-sky-200 px-3 py-2.5 rounded-xl border border-sky-200/70 dark:border-sky-800/50">
+                        <span>Gross Income (Kasar)</span>
+                        <span id="displayGrossIncome">RM 4,746.21</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEKSYEN B: TAX & CARUMAN -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <h2 class="font-extrabold text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400">2. Tax & Caruman</h2>
+                    <button type="button" onclick="togglePcbPanel()" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800/60">
+                        Tetapan PCB (LHDN) ⚙️
+                    </button>
+                </div>
+
+                <div class="p-3.5 space-y-3">
+                    <div id="pcbSettingsPanel" class="hidden p-3 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 space-y-2.5 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">Kiraan Automatik PCB LHDN</span>
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" id="pcbAutoToggle" onchange="togglePcbAuto(this.checked)" class="w-3.5 h-3.5 accent-emerald-600">
+                                <span class="text-[11px] font-bold">Auto</span>
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">Status Perkahwinan</label>
+                                <select id="pcbMaritalStatus" onchange="updatePcbConfig()" class="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+                                    <option value="married_working">Kahwin (Pasangan Bekerja)</option>
+                                    <option value="married_nonworking">Kahwin (Pasangan Tak Bekerja +4k)</option>
+                                    <option value="single">Bujang</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">Bilangan Anak (+RM2k/anak)</label>
+                                <input type="number" step="1" min="0" inputmode="numeric" id="pcbChildren" onchange="updatePcbConfig()" class="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-center">
+                            </div>
+                        </div>
+
+                        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
+                            <div class="flex justify-between text-slate-600 dark:text-slate-300">
+                                <span>Pendapatan Tahunan (12 bln + Bonus):</span>
+                                <strong id="pcbAnnualIncomeTxt">RM 60,863.52</strong>
+                            </div>
+                            <div class="flex justify-between text-slate-600 dark:text-slate-300">
+                                <span>Jumlah Pelepasan Cukai:</span>
+                                <strong id="pcbReliefTxt">RM 15,350.00</strong>
+                            </div>
+                            <div class="flex justify-between text-slate-600 dark:text-slate-300">
+                                <span>Pendapatan Bercukai:</span>
+                                <strong id="pcbChargeableTxt">RM 45,513.52</strong>
+                            </div>
+                            <div class="border-t border-slate-100 dark:border-slate-800 my-1 pt-1 flex justify-between text-emerald-600 dark:text-emerald-400">
+                                <span>PCB Bulan Biasa (Feb–Dis):</span>
+                                <strong id="pcbNormalMonthTxt">RM 86.73 / bln</strong>
+                            </div>
+                            <div class="flex justify-between text-amber-600 dark:text-amber-400">
+                                <span>PCB Bulan Bonus (Januari):</span>
+                                <strong id="pcbBonusMonthTxt">RM 335.15</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div class="bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <div class="flex justify-between items-center">
+                                <label class="text-[10px] font-semibold text-slate-500">EPF (RM)</label>
+                                <span id="epfBonusTag" class="hidden text-[9px] font-bold text-amber-500">+11% Bonus</span>
+                            </div>
+                            <input type="number" step="0.01" inputmode="decimal" id="inputEpf" onchange="updateTaxInputs()" onblur="formatInput2Dec(this)" class="w-full font-extrabold text-sm bg-transparent focus:outline-none mt-0.5">
+                        </div>
+
+                        <div class="bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <label class="block text-[10px] font-semibold text-slate-500">SOCSO (RM)</label>
+                            <input type="number" step="0.01" inputmode="decimal" id="inputSocso" onchange="updateTaxInputs()" onblur="formatInput2Dec(this)" class="w-full font-extrabold text-sm bg-transparent focus:outline-none mt-0.5">
+                        </div>
+
+                        <div class="bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <label class="block text-[10px] font-semibold text-slate-500">EIS (RM)</label>
+                            <input type="number" step="0.01" inputmode="decimal" id="inputEis" onchange="updateTaxInputs()" onblur="formatInput2Dec(this)" class="w-full font-extrabold text-sm bg-transparent focus:outline-none mt-0.5">
+                        </div>
+
+                        <div class="bg-indigo-50/80 dark:bg-indigo-950/40 p-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60">
+                            <div class="flex justify-between items-center">
+                                <label class="text-[10px] font-bold text-indigo-700 dark:text-indigo-300">PCB LHDN (RM)</label>
+                                <span id="pcbModeBadge" class="text-[9px] font-bold bg-indigo-200/80 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-1.5 rounded">AUTO</span>
+                            </div>
+                            <input type="number" step="0.01" inputmode="decimal" id="inputPcb" onchange="overridePcb(this.value)" onblur="formatInput2Dec(this)" class="w-full font-extrabold text-sm text-indigo-800 dark:text-indigo-200 bg-transparent focus:outline-none mt-0.5">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex items-center justify-between text-xs font-bold bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 px-3 py-2 rounded-xl">
+                            <span>Jumlah Potongan (Tax)</span>
+                            <span id="displayTotalTax">RM 615.93</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm font-extrabold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
+                            <span>Gaji Bersih (Net Salary)</span>
+                            <span id="displayNetSalary">RM 4,130.28</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEKSYEN C: KOMITMEN SUAMI & WIFE -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <div>
+                        <h2 class="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-100">3. Comitment (Anda & Wife)</h2>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Tekan kotak tick bila dah bayar (Hijau ✔)</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onclick="openConfirmModal('month')" class="px-2.5 py-1.5 text-[11px] font-bold rounded-xl bg-amber-100 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 active:scale-95 transition">
+                            Reset Tick
+                        </button>
+                        <button type="button" onclick="openAddCommitmentModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition">
+                            + Tambah
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bar Status Bayaran -->
+                <div class="px-3.5 py-2 bg-slate-100/70 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between text-[11px]">
+                    <div>Anda Bayar: <strong id="paidMySummary" class="text-emerald-600 dark:text-emerald-400">RM 0.00</strong> (<span id="countMyPaid">0/13</span>)</div>
+                    <div>Wife Bayar: <strong id="paidWifeSummary" class="text-indigo-600 dark:text-indigo-400">RM 0.00</strong> (<span id="countWifePaid">0/4</span>)</div>
+                </div>
+
+                <!-- Senarai Kad Komitmen -->
+                <div id="commitmentListContainer" class="divide-y divide-slate-100 dark:divide-slate-800"></div>
+
+                <!-- Ringkasan Jumlah Komitmen -->
+                <div class="p-3.5 bg-sky-50 dark:bg-sky-950/50 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
+                    <div class="flex justify-between items-center text-sm font-extrabold text-slate-900 dark:text-white">
+                        <span>Total Komitmen Anda</span>
+                        <span id="summaryTotalMy">RM 3,391.01</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm font-extrabold text-indigo-700 dark:text-indigo-300">
+                        <span>Total Komitmen Wife</span>
+                        <span id="summaryTotalWife">RM 999.11</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEKSYEN D: BALANCE, SAVING & OTHERS -->
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-3.5 space-y-3">
+                <h2 class="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-100">4. Agihan Baki</h2>
+
+                <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+                    <span class="font-bold text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm">Balance (Net Salary - Komitmen Anda)</span>
+                    <span id="summaryBalance" class="font-extrabold text-base text-emerald-700 dark:text-emerald-400">RM 739.27</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                        <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400">Saving (RM)</label>
+                        <input type="number" step="0.01" inputmode="decimal" id="inputSaving" onchange="updateSavingInput()" onblur="formatInput2Dec(this)" class="w-full font-extrabold text-sm bg-transparent focus:outline-none mt-1">
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                        <span class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400">Others (Balance - Saving)</span>
+                        <div id="summaryOthers" class="font-extrabold text-sm text-slate-900 dark:text-white mt-1">RM 439.27</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BUTANG SIMPAN BESAR DI BAWAH -->
+            <div class="pt-1 space-y-3">
+                <button type="button" onclick="manualSaveAction()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-2">
+                    <span>💾</span>
+                    <span>Simpan Semua Rekod</span>
+                </button>
+
+                <div class="flex items-center justify-between px-1 text-xs">
+                    <button type="button" onclick="openBackupModal()" class="text-indigo-600 dark:text-indigo-400 font-bold underline">
+                        Backup / Restore Fail Data
+                    </button>
+                    <button type="button" onclick="openConfirmModal('all')" class="text-slate-400 hover:text-rose-500 underline">
+                        Reset Data Asal
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 2: LOG OT HARIAN                                      -->
+        <!-- ========================================================= -->
+        <div id="viewOt" class="hidden space-y-4">
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-3.5 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="font-extrabold text-sm text-slate-900 dark:text-white">Kadar OT Sejam</h2>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Auto-darab dengan jumlah jam OT</p>
+                </div>
+                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span class="text-xs font-bold text-slate-400">RM</span>
+                    <input type="number" step="0.01" inputmode="decimal" id="inputOtRate" onchange="updateOtRate()" onblur="formatInput2Dec(this)" class="w-20 text-right font-extrabold text-sm text-emerald-600 dark:text-emerald-400 bg-transparent focus:outline-none">
+                </div>
+            </section>
+
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-3.5 space-y-3">
+                <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-100">+ Tambah Rekod OT Harian</h3>
+                <form onsubmit="addOtLog(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Tarikh OT</label>
+                        <input type="date" id="newOtDate" required class="w-full min-w-0 px-3 py-2.5 text-sm font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Jumlah Jam OT</label>
+                            <input type="number" step="0.01" inputmode="decimal" id="newOtHours" placeholder="Contoh: 4.5" required class="w-full min-w-0 px-3 py-2.5 text-sm font-extrabold text-emerald-600 dark:text-emerald-400 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Catatan (Pilihan)</label>
+                            <input type="text" id="newOtNote" placeholder="Normal / PH" class="w-full min-w-0 px-3 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-sm rounded-xl shadow-sm transition">
+                        + Tambah & Simpan Rekod OT
+                    </button>
+                </form>
+            </section>
+
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                    <span class="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-100">Senarai Rekod OT</span>
+                    <span class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
+                        <span id="otSummaryHours">30.00</span> jam = <span id="otSummaryRm">RM 737.10</span>
+                    </span>
+                </div>
+                <div id="otListContainer" class="divide-y divide-slate-100 dark:divide-slate-800"></div>
+            </section>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 3: DAYCARE                                            -->
+        <!-- ========================================================= -->
+        <div id="viewDaycare" class="hidden space-y-4">
+            <section class="bg-indigo-600 dark:bg-indigo-800 text-white rounded-2xl p-4 shadow-sm space-y-3">
+                <div class="flex justify-between items-start gap-2">
+                    <div>
+                        <span class="text-[11px] uppercase tracking-wider font-bold text-indigo-200">Jumlah Besar Daycare</span>
+                        <div id="dcGrandTotalTxt" class="text-2xl font-extrabold mt-0.5">RM 714.22</div>
+                        <span class="text-[11px] text-indigo-200">Auto-sync ke komitmen Daycare di Tab Utama</span>
+                    </div>
+                    <span class="bg-white/20 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shrink-0">
+                        🔗 Auto-Sync
+                    </span>
+                </div>
+
+                <div class="pt-2.5 border-t border-indigo-400/40 flex items-center justify-between gap-2">
+                    <span class="text-xs font-medium text-indigo-100">Mod Agihan:</span>
+                    <select id="dcSplitMode" onchange="updateDcSplitMode(this.value)" class="bg-indigo-950/70 text-white text-xs font-bold px-3 py-2 rounded-xl border border-indigo-400/40 focus:outline-none">
+                        <option value="50_50">Kongsi 50% Anda / 50% Wife</option>
+                        <option value="100_my">100% Anda Bayar</option>
+                    </select>
+                </div>
+            </section>
+
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <div>
+                        <h3 class="font-extrabold text-sm text-slate-900 dark:text-white">1. Normal hrs</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Kadar asas & bilangan jam/hari</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-[10px] text-slate-400">Jumlah RM</span>
+                        <span id="dcNormalTotalTxt" class="font-extrabold text-base text-emerald-600 dark:text-emerald-400">RM 70.00</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Kadar Unit (RM)</label>
+                        <input type="number" step="0.01" inputmode="decimal" id="dcNormalRate" onchange="updateDcRates()" onblur="formatInput2Dec(this)" class="w-full font-extrabold text-base text-slate-900 dark:text-white bg-transparent focus:outline-none">
+                    </div>
+
+                    <div class="bg-pink-50/70 dark:bg-pink-950/20 p-3 rounded-xl border border-pink-200 dark:border-pink-800/50">
+                        <label class="block text-[11px] font-bold text-pink-700 dark:text-pink-300 mb-1">Jam / Hari</label>
+                        <div class="flex items-center justify-between gap-1">
+                            <button type="button" onclick="stepDcQty('normal', -0.5)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-extrabold text-base active:scale-90">-</button>
+                            <input type="number" step="0.01" inputmode="decimal" id="dcNormalQty" onchange="updateDcRates()" class="w-14 text-center font-extrabold text-base text-pink-600 dark:text-pink-400 bg-transparent focus:outline-none">
+                            <button type="button" onclick="stepDcQty('normal', 0.5)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-extrabold text-base active:scale-90">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-2.5 border border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2.5 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500 dark:text-slate-400">Rujukan Jam 1:</span>
+                        <input type="number" step="0.01" inputmode="decimal" id="dcRefRate1" onchange="updateDcRefRates()" onblur="formatInput2Dec(this)" class="w-16 text-right font-bold bg-white dark:bg-slate-900 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500 dark:text-slate-400">Rujukan Jam 2:</span>
+                        <input type="number" step="0.01" inputmode="decimal" id="dcRefRate2" onchange="updateDcRefRates()" onblur="formatInput2Dec(this)" class="w-16 text-right font-bold bg-white dark:bg-slate-900 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <div>
+                        <h3 class="font-extrabold text-sm text-slate-900 dark:text-white">2. Normal + OT hrs</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Kadar harian termasuk OT & bilangan jam/hari</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-[10px] text-slate-400">Jumlah RM</span>
+                        <span id="dcOtTotalTxt" class="font-extrabold text-base text-emerald-600 dark:text-emerald-400">RM 644.18</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Kadar Unit (RM)</label>
+                        <input type="number" step="0.01" inputmode="decimal" id="dcOtRate" onchange="updateDcRates()" onblur="formatInput2Dec(this)" class="w-full font-extrabold text-base text-slate-900 dark:text-white bg-transparent focus:outline-none">
+                    </div>
+
+                    <div class="bg-pink-50/70 dark:bg-pink-950/20 p-3 rounded-xl border border-pink-200 dark:border-pink-800/50">
+                        <label class="block text-[11px] font-bold text-pink-700 dark:text-pink-300 mb-1">Jam / Hari</label>
+                        <div class="flex items-center justify-between gap-1">
+                            <button type="button" onclick="stepDcQty('ot', -0.5)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-extrabold text-base active:scale-90">-</button>
+                            <input type="number" step="0.01" inputmode="decimal" id="dcOtQty" onchange="updateDcRates()" class="w-14 text-center font-extrabold text-base text-pink-600 dark:text-pink-400 bg-transparent focus:outline-none">
+                            <button type="button" onclick="stepDcQty('ot', 0.5)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-extrabold text-base active:scale-90">+</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-3.5 space-y-2 text-xs">
+                <div class="font-extrabold text-slate-800 dark:text-slate-100">Pecahan Masuk ke Tab Utama:</div>
+                <div class="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span class="text-slate-500">Bahagian Anda:</span>
+                    <strong id="dcShareMyTxt" class="text-slate-900 dark:text-white">RM 357.09</strong>
+                </div>
+                <div class="flex justify-between py-1">
+                    <span class="text-slate-500">Bahagian Wife:</span>
+                    <strong id="dcShareWifeTxt" class="text-indigo-600 dark:text-indigo-400">RM 357.09</strong>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- MODAL BACKUP & RESTORE DATA -->
+    <div id="backupModal" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-extrabold text-base text-slate-900 dark:text-white">💾 Simpan & Backup Data</h3>
+                <button type="button" onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+            </div>
+
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Gunakan pilihan di bawah untuk simpan fail rekod anda ke telefon atau muat naik semula bila-bila masa (terutama jika buka melalui *preview*).
+            </p>
+
+            <div class="space-y-2.5">
+                <!-- Export JSON File -->
+                <button type="button" onclick="exportDataFile()" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm">
+                    <span>⬇️</span>
+                    <span>Muat Turun Fail Backup (.json)</span>
+                </button>
+
+                <!-- Import JSON File -->
+                <label class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                    <span>⬆️</span>
+                    <span>Muat Naik Fail Backup (.json)</span>
+                    <input type="file" accept=".json,application/json" onchange="importDataFile(event)" class="hidden">
+                </label>
+
+                <!-- Copy Text Backup -->
+                <button type="button" onclick="copyBackupText()" class="w-full py-2.5 px-4 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+                    <span>📋</span>
+                    <span>Salin Kod Data (Copy Text)</span>
+                </button>
+            </div>
+
+            <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400">Atau Tampal (Paste) Kod Backup di sini:</label>
+                <textarea id="pasteBackupArea" rows="2" placeholder='Tampal kod JSON di sini dan tekan Pulihkan...' class="w-full p-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none"></textarea>
+                <button type="button" onclick="restoreFromPastedText()" class="w-full py-2 bg-slate-800 dark:bg-slate-700 text-white font-bold text-xs rounded-xl">
+                    Pulihkan Dari Teks
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH KOMITMEN BARU -->
+    <div id="addCommitmentModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-extrabold text-base text-slate-900 dark:text-white">Tambah Komitmen Baru</h3>
+                <button type="button" onclick="closeAddCommitmentModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+            </div>
+            <form onsubmit="saveNewCommitment(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Nama Komitmen</label>
+                    <input type="text" id="newCommName" required placeholder="Contoh: Takaful / Unifi" class="w-full px-3 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Anda (RM)</label>
+                        <input type="number" step="0.01" inputmode="decimal" id="newCommMy" value="0.00" onblur="formatInput2Dec(this)" required class="w-full px-3 py-2.5 text-sm font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Wife (RM)</label>
+                        <input type="number" step="0.01" inputmode="decimal" id="newCommWife" value="0.00" onblur="formatInput2Dec(this)" required class="w-full px-3 py-2.5 text-sm font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAddCommitmentModal()" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PENGESAHAN RESET -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
+            <h3 id="confirmTitle" class="font-extrabold text-base text-slate-900 dark:text-white">Reset Status Tick?</h3>
+            <p id="confirmDesc" class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">Semua kotak hijau bayaran akan dikosongkan untuk bulan baharu.</p>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Batal</button>
+                <button type="button" id="confirmActionBtn" class="px-4 py-2 text-xs font-bold rounded-xl bg-amber-600 text-white">Ya, Teruskan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'salary_commitment_tracker_v5';
+        let storageAvailable = true;
+
+        const DEFAULT_STATE = {
+            income: {
+                basic: 3909.00,
+                incentive: 100.00,
+                isBonusMonth: false,
+                otManualOverride: null
+            },
+            tax: {
+                epf: 460.38,
+                socso: 59.33,
+                eis: 9.49,
+                pcb: 0.00,
+                pcbAuto: true,
+                maritalStatus: 'married_working',
+                children: 1
+            },
+            otRate: 24.57,
+            otLogs: [
+                { id: 1, date: '2026-11-02', hours: 10, note: 'Normal OT' },
+                { id: 2, date: '2026-11-08', hours: 10, note: 'Normal OT' },
+                { id: 3, date: '2026-11-12', hours: 10, note: 'Normal OT' }
+            ],
+            daycare: {
+                normalRate: 35.00,
+                normalQty: 2,
+                refRate1: 4.38,
+                refRate2: 6.56,
+                otRate: 41.56,
+                otQty: 15.5,
+                splitMode: '50_50'
+            },
+            commitments: [
+                { id: 1, name: 'Car', myAmount: 235.00, myPaid: false, wifeAmount: 235.00, wifePaid: false },
+                { id: 2, name: 'Motorcycle', myAmount: 107.00, myPaid: false, wifeAmount: 107.00, wifePaid: false },
+                { id: 3, name: 'House rent', myAmount: 715.00, myPaid: false, wifeAmount: 300.00, wifePaid: false },
+                { id: 4, name: 'Daycare', myAmount: 357.09, myPaid: false, wifeAmount: 357.09, wifePaid: false, isDaycareLinked: true },
+                { id: 5, name: 'Fuel+milk+diapers+groceries', myAmount: 500.00, myPaid: false, wifeAmount: 0.00, wifePaid: false },
+                { id: 6, name: 'Credit card', myAmount: 540.00, myPaid: false, wifeAmount: 0.00, wifePaid: false },
+                { id: 7, name: 'Parent', myAmount: 100.00, myPaid: false, wifeAmount: 0.00, wifePaid: false },
+                { id: 8, name: 'Netflix', myAmount: 29.90, myPaid: false, wifeAmount: 0.00, wifePaid: false },
+                { id: 9, name: 'Umobile', myAmount: 60.00, myPaid: false, wifeAmount: 0.00, wifePaid: false },
+                { id: 10, name: 'Water bill', myAmount: 10.00, myPaid: false, wifeAmount: 0.00, wifePaid: false },
+                { id: 11, name: 'PTPTN', myAmount: 169.00, myPaid: false, wifeAmount: 0.00, wifePaid: false },
+                { id: 12, name: 'Shopee', myAmount: 418.00, myPaid: false, wifeAmount: 0.00, wifePaid: false },
+                { id: 13, name: 'Electric bill', myAmount: 150.00, myPaid: false, wifeAmount: 0.00, wifePaid: false }
+            ],
+            saving: 300.00,
+            lastSavedAt: null
+        };
+
+        // Semak jika localStorage dibenarkan oleh pelayar
+        function checkStorageSupport() {
+            try {
+                const testKey = '__test_storage__';
+                localStorage.setItem(testKey, '1');
+                localStorage.removeItem(testKey);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        storageAvailable = checkStorageSupport();
+        let state = loadState();
+
+        function loadState() {
+            if (!storageAvailable) {
+                return JSON.parse(JSON.stringify(DEFAULT_STATE));
+            }
+            try {
+                // Cuba baca v5 dahulu, jika tiada semak v4 supaya data lama tidak hilang
+                const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('salary_commitment_tracker_v4');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    return mergeWithDefault(parsed);
+                }
+            } catch (err) {
+                console.error('Gagal memuatkan localStorage:', err);
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        }
+
+        function mergeWithDefault(parsed) {
+            return {
+                ...JSON.parse(JSON.stringify(DEFAULT_STATE)),
+                ...parsed,
+                income: { ...DEFAULT_STATE.income, ...(parsed.income || {}) },
+                tax: { ...DEFAULT_STATE.tax, ...(parsed.tax || {}) },
+                daycare: { ...DEFAULT_STATE.daycare, ...(parsed.daycare || {}) }
+            };
+        }
+
+        function saveState(showFeedback = false) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            state.lastSavedAt = timeStr;
+
+            let savedOk = false;
+            if (storageAvailable) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                    savedOk = true;
+                } catch (err) {
+                    savedOk = false;
+                }
+            }
+
+            const statusSub = document.getElementById('saveStatusSubtitle');
+            if (savedOk) {
+                statusSub.textContent = `✔ Disimpan (${timeStr})`;
+                statusSub.className = 'text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate';
+                if (showFeedback) {
+                    showToast(`Rekod disimpan pada ${timeStr}`);
+                }
+            } else {
+                statusSub.textContent = '⚠️ Storan disekat (Guna Backup)';
+                statusSub.className = 'text-[11px] text-amber-600 dark:text-amber-400 font-bold truncate';
+                document.getElementById('storageWarningBanner').classList.remove('hidden');
+                if (showFeedback) {
+                    openBackupModal();
+                }
+            }
+        }
+
+        function manualSaveAction() {
+            // Pastikan sebarang input yang sedang ditaip terus dibaca
+            state.income.basic = round2(document.getElementById('inputBasic').value);
+            state.income.incentive = round2(document.getElementById('inputIncentive').value);
+            state.saving = round2(document.getElementById('inputSaving').value);
+            recalculateAll();
+            saveState(true);
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const toast = document.getElementById('saveToast');
+            document.getElementById('saveToastText').textContent = msg;
+            toast.classList.remove('hidden');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
+        // Fungsi Backup & Restore
+        function openBackupModal() {
+            document.getElementById('backupModal').classList.remove('hidden');
+        }
+
+        function closeBackupModal() {
+            document.getElementById('backupModal').classList.add('hidden');
+        }
+
+        function exportDataFile() {
+            const dataStr = JSON.stringify(state, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const dateStamp = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `Salary_Commitment_Backup_${dateStamp}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Fail backup berjaya dimuat turun!');
+        }
+
+        function importDataFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    state = mergeWithDefault(parsed);
+                    saveState(true);
+                    initApp();
+                    closeBackupModal();
+                    showToast('Data berjaya dipulihkan!');
+                } catch (err) {
+                    alert('Fail tidak sah. Sila pilih fail backup .json yang betul.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function copyBackupText() {
+            const dataStr = JSON.stringify(state);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(dataStr).then(() => {
+                    showToast('Kod data disalin ke clipboard!');
+                }).catch(() => {
+                    document.getElementById('pasteBackupArea').value = dataStr;
+                    showToast('Kod dipaparkan di kotak bawah.');
+                });
+            } else {
+                document.getElementById('pasteBackupArea').value = dataStr;
+                showToast('Kod dipaparkan di kotak bawah.');
+            }
+        }
+
+        function restoreFromPastedText() {
+            const raw = document.getElementById('pasteBackupArea').value.trim();
+            if (!raw) return;
+            try {
+                const parsed = JSON.parse(raw);
+                state = mergeWithDefault(parsed);
+                saveState(true);
+                initApp();
+                document.getElementById('pasteBackupArea').value = '';
+                closeBackupModal();
+                showToast('Data berjaya dipulihkan!');
+            } catch (err) {
+                alert('Kod JSON tidak sah. Pastikan anda tampal kod sepenuhnya.');
+            }
+        }
+
+        // Utiliti Bundar Ketat 2 Titik Perpuluhan
+        function toNum(v) {
+            const n = parseFloat(v);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function round2(v) {
+            return Math.round((toNum(v) + Number.EPSILON) * 100) / 100;
+        }
+
+        function formatRM(v) {
+            const num = round2(v);
+            return 'RM ' + num.toLocaleString('en-MY', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatInput2Dec(el) {
+            el.value = round2(el.value).toFixed(2);
+        }
+
+        // Pengiraan Cukai Pendapatan Progresif LHDN Malaysia
+        function calcMalaysiaProgressiveTax(chargeableIncome) {
+            if (chargeableIncome <= 5000) return 0;
+            let tax = 0;
+
+            if (chargeableIncome > 5000) tax += Math.min(chargeableIncome - 5000, 15000) * 0.01;
+            if (chargeableIncome > 20000) tax += Math.min(chargeableIncome - 20000, 15000) * 0.03;
+            if (chargeableIncome > 35000) tax += Math.min(chargeableIncome - 35000, 15000) * 0.06;
+            if (chargeableIncome > 50000) tax += Math.min(chargeableIncome - 50000, 20000) * 0.11;
+            if (chargeableIncome > 70000) tax += Math.min(chargeableIncome - 70000, 30000) * 0.19;
+            if (chargeableIncome > 100000) tax += (chargeableIncome - 100000) * 0.25;
+
+            if (chargeableIncome <= 35000) {
+                tax = Math.max(0, tax - 400);
+            }
+            return round2(tax);
+        }
+
+        function computePcbDetails(monthlyNormalGross, bonusAmount) {
+            const selfRelief = 9000;
+            const epfAnnual = round2(state.tax.epf) * 12 + (bonusAmount * 0.11);
+            const epfRelief = Math.min(4000, epfAnnual);
+            const socsoEisAnnual = (round2(state.tax.socso) + round2(state.tax.eis)) * 12;
+            const socsoEisRelief = Math.min(350, socsoEisAnnual);
+            const spouseRelief = state.tax.maritalStatus === 'married_nonworking' ? 4000 : 0;
+            const childRelief = Math.max(0, parseInt(state.tax.children) || 0) * 2000;
+
+            const totalRelief = round2(selfRelief + epfRelief + socsoEisRelief + spouseRelief + childRelief);
+
+            const annualNormal = round2(monthlyNormalGross * 12);
+            const chargeableNormal = Math.max(0, round2(annualNormal - totalRelief));
+            const annualTaxNormal = calcMalaysiaProgressiveTax(chargeableNormal);
+            const normalMonthPcb = round2(annualTaxNormal / 12);
+
+            const annualWithBonus = round2(annualNormal + bonusAmount);
+            const chargeableWithBonus = Math.max(0, round2(annualWithBonus - totalRelief));
+            const annualTaxWithBonus = calcMalaysiaProgressiveTax(chargeableWithBonus);
+            const extraBonusTax = Math.max(0, round2(annualTaxWithBonus - annualTaxNormal));
+            const bonusMonthPcb = round2(normalMonthPcb + extraBonusTax);
+
+            return {
+                annualWithBonus,
+                totalRelief,
+                chargeableWithBonus,
+                normalMonthPcb,
+                bonusMonthPcb
+            };
+        }
+
+        function initApp() {
+            if (!storageAvailable) {
+                document.getElementById('storageWarningBanner').classList.remove('hidden');
+            }
+
+            const dateInput = document.getElementById('newOtDate');
+            if (dateInput && !dateInput.value) {
+                dateInput.valueAsDate = new Date();
+            }
+
+            document.getElementById('inputBasic').value = round2(state.income.basic).toFixed(2);
+            document.getElementById('inputIncentive').value = round2(state.income.incentive).toFixed(2);
+            document.getElementById('toggleBonusMonth').checked = !!state.income.isBonusMonth;
+
+            document.getElementById('inputEpf').value = round2(state.tax.epf).toFixed(2);
+            document.getElementById('inputSocso').value = round2(state.tax.socso).toFixed(2);
+            document.getElementById('inputEis').value = round2(state.tax.eis).toFixed(2);
+            document.getElementById('pcbAutoToggle').checked = !!state.tax.pcbAuto;
+            document.getElementById('pcbMaritalStatus').value = state.tax.maritalStatus;
+            document.getElementById('pcbChildren').value = state.tax.children;
+
+            document.getElementById('inputSaving').value = round2(state.saving).toFixed(2);
+            document.getElementById('inputOtRate').value = round2(state.otRate).toFixed(2);
+
+            document.getElementById('dcNormalRate').value = round2(state.daycare.normalRate).toFixed(2);
+            document.getElementById('dcNormalQty').value = round2(state.daycare.normalQty);
+            document.getElementById('dcRefRate1').value = round2(state.daycare.refRate1).toFixed(2);
+            document.getElementById('dcRefRate2').value = round2(state.daycare.refRate2).toFixed(2);
+            document.getElementById('dcOtRate').value = round2(state.daycare.otRate).toFixed(2);
+            document.getElementById('dcOtQty').value = round2(state.daycare.otQty);
+            document.getElementById('dcSplitMode').value = state.daycare.splitMode || '50_50';
+
+            recalculateAll();
+        }
+
+        function recalculateAll() {
+            const dc = state.daycare;
+            const dcNormalRm = round2(round2(dc.normalRate) * round2(dc.normalQty));
+            const dcOtRm = round2(round2(dc.otRate) * round2(dc.otQty));
+            const dcGrandTotal = round2(dcNormalRm + dcOtRm);
+
+            document.getElementById('dcNormalTotalTxt').textContent = formatRM(dcNormalRm);
+            document.getElementById('dcOtTotalTxt').textContent = formatRM(dcOtRm);
+            document.getElementById('dcGrandTotalTxt').textContent = formatRM(dcGrandTotal);
+            document.getElementById('badgeDaycareTotal').textContent = dcGrandTotal.toFixed(0);
+
+            let dcMy = 0;
+            let dcWife = 0;
+            if (dc.splitMode === '100_my') {
+                dcMy = dcGrandTotal;
+                dcWife = 0;
+            } else {
+                dcMy = round2(dcGrandTotal / 2);
+                dcWife = round2(dcGrandTotal - dcMy);
+            }
+
+            document.getElementById('dcShareMyTxt').textContent = formatRM(dcMy);
+            document.getElementById('dcShareWifeTxt').textContent = formatRM(dcWife);
+
+            const daycareItem = state.commitments.find(c => c.isDaycareLinked || c.name.toLowerCase() === 'daycare');
+            if (daycareItem) {
+                daycareItem.isDaycareLinked = true;
+                daycareItem.myAmount = dcMy;
+                daycareItem.wifeAmount = dcWife;
+                if (dcMy === 0) daycareItem.myPaid = false;
+                if (dcWife === 0) daycareItem.wifePaid = false;
+            }
+
+            const totalOtHours = round2(state.otLogs.reduce((acc, item) => acc + round2(item.hours), 0));
+            const calculatedOtRm = round2(totalOtHours * round2(state.otRate));
+            const activeOtRm = state.income.otManualOverride !== null ? round2(state.income.otManualOverride) : calculatedOtRm;
+
+            document.getElementById('badgeOtHours').textContent = totalOtHours.toFixed(0) + 'j';
+            document.getElementById('otSummaryHours').textContent = totalOtHours.toFixed(2);
+            document.getElementById('otSummaryRm').textContent = formatRM(calculatedOtRm);
+            document.getElementById('inputOtMain').value = activeOtRm.toFixed(2);
+
+            const basic = round2(state.income.basic);
+            const incentive = round2(state.income.incentive);
+            const isBonus = !!state.income.isBonusMonth;
+            const bonusVal = isBonus ? basic : 0;
+
+            const bonusRow = document.getElementById('bonusRow');
+            const epfBonusTag = document.getElementById('epfBonusTag');
+            if (isBonus) {
+                bonusRow.classList.remove('hidden');
+                epfBonusTag.classList.remove('hidden');
+                document.getElementById('displayBonusVal').textContent = formatRM(bonusVal);
+            } else {
+                bonusRow.classList.add('hidden');
+                epfBonusTag.classList.add('hidden');
+            }
+
+            const normalMonthlyGross = round2(basic + incentive + activeOtRm);
+            const grossIncome = round2(normalMonthlyGross + bonusVal);
+            document.getElementById('displayGrossIncome').textContent = formatRM(grossIncome);
+
+            const baseEpf = round2(state.tax.epf);
+            const effectiveEpf = isBonus ? round2(baseEpf + (bonusVal * 0.11)) : baseEpf;
+            document.getElementById('inputEpf').value = effectiveEpf.toFixed(2);
+
+            const pcbDetails = computePcbDetails(normalMonthlyGross, basic);
+            document.getElementById('pcbAnnualIncomeTxt').textContent = formatRM(pcbDetails.annualWithBonus);
+            document.getElementById('pcbReliefTxt').textContent = formatRM(pcbDetails.totalRelief);
+            document.getElementById('pcbChargeableTxt').textContent = formatRM(pcbDetails.chargeableWithBonus);
+            document.getElementById('pcbNormalMonthTxt').textContent = formatRM(pcbDetails.normalMonthPcb) + ' / bln';
+            document.getElementById('pcbBonusMonthTxt').textContent = formatRM(pcbDetails.bonusMonthPcb);
+
+            if (state.tax.pcbAuto) {
+                state.tax.pcb = isBonus ? pcbDetails.bonusMonthPcb : pcbDetails.normalMonthPcb;
+                document.getElementById('pcbModeBadge').textContent = 'AUTO';
+            } else {
+                document.getElementById('pcbModeBadge').textContent = 'MANUAL';
+            }
+            document.getElementById('inputPcb').value = round2(state.tax.pcb).toFixed(2);
+
+            const totalTax = round2(effectiveEpf + round2(state.tax.socso) + round2(state.tax.eis) + round2(state.tax.pcb));
+            const netSalary = round2(grossIncome - totalTax);
+
+            document.getElementById('displayTotalTax').textContent = formatRM(totalTax);
+            document.getElementById('displayNetSalary').textContent = formatRM(netSalary);
+            document.getElementById('topNetSalary').textContent = formatRM(netSalary);
+
+            let totalMy = 0, paidMy = 0, countMyAll = 0, countMyDone = 0;
+            let totalWife = 0, paidWife = 0, countWifeAll = 0, countWifeDone = 0;
+
+            state.commitments.forEach(c => {
+                const m = round2(c.myAmount);
+                const w = round2(c.wifeAmount);
+                if (m > 0) {
+                    totalMy = round2(totalMy + m);
+                    countMyAll++;
+                    if (c.myPaid) {
+                        paidMy = round2(paidMy + m);
+                        countMyDone++;
+                    }
+                }
+                if (w > 0) {
+                    totalWife = round2(totalWife + w);
+                    countWifeAll++;
+                    if (c.wifePaid) {
+                        paidWife = round2(paidWife + w);
+                        countWifeDone++;
+                    }
+                }
+            });
+
+            document.getElementById('topMyCommitment').textContent = formatRM(totalMy);
+            document.getElementById('summaryTotalMy').textContent = formatRM(totalMy);
+            document.getElementById('summaryTotalWife').textContent = formatRM(totalWife);
+            document.getElementById('paidMySummary').textContent = formatRM(paidMy);
+            document.getElementById('paidWifeSummary').textContent = formatRM(paidWife);
+            document.getElementById('countMyPaid').textContent = `${countMyDone}/${countMyAll}`;
+            document.getElementById('countWifePaid').textContent = `${countWifeDone}/${countWifeAll}`;
+
+            const balance = round2(netSalary - totalMy);
+            const others = round2(balance - round2(state.saving));
+
+            document.getElementById('topBalance').textContent = formatRM(balance);
+            document.getElementById('summaryBalance').textContent = formatRM(balance);
+            document.getElementById('summaryOthers').textContent = formatRM(others);
+
+            renderCommitments();
+            renderOtLogs();
+            saveState(false);
+        }
+
+        function renderCommitments() {
+            const container = document.getElementById('commitmentListContainer');
+            container.innerHTML = '';
+
+            state.commitments.forEach((item, idx) => {
+                const myAmt = round2(item.myAmount);
+                const wifeAmt = round2(item.wifeAmount);
+                const myPaid = item.myPaid && myAmt > 0;
+                const wifePaid = item.wifePaid && wifeAmt > 0;
+                const linked = !!item.isDaycareLinked;
+
+                const card = document.createElement('div');
+                card.className = 'p-3.5 space-y-2.5';
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0 flex-1">
+                            <input type="text" value="${escapeHtml(item.name)}" ${linked ? 'readonly' : `onchange="updateCommName(${idx}, this.value)"`}
+                                class="font-bold text-sm text-slate-800 dark:text-slate-100 bg-transparent focus:outline-none truncate w-full">
+                            ${linked ? `<button type="button" onclick="switchTab('daycare')" class="shrink-0 text-[10px] font-bold bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">🔗 Daycare</button>` : ''}
+                        </div>
+                        ${!linked ? `
+                            <button type="button" onclick="deleteCommitment(${idx})" aria-label="Padam komitmen"
+                                class="w-7 h-7 shrink-0 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-500 hover:bg-rose-600 hover:text-white flex items-center justify-center text-xs font-bold transition">
+                                ✕
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div class="flex items-center justify-between p-2 rounded-xl border transition-all ${myPaid ? 'paid-card-box' : 'bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700'}">
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-[10px] font-semibold opacity-75">Anda (RM)</span>
+                                <input type="number" step="0.01" inputmode="decimal" value="${myAmt.toFixed(2)}"
+                                    ${linked ? 'readonly onclick="switchTab(\'daycare\')"' : `onchange="updateCommAmount(${idx}, 'my', this.value)" onblur="formatInput2Dec(this)"`}
+                                    class="w-full font-extrabold text-sm bg-transparent focus:outline-none">
+                            </div>
+                            <button type="button" onclick="toggleCommPaid(${idx}, 'my')" ${myAmt <= 0 ? 'disabled' : ''}
+                                class="w-10 h-10 shrink-0 rounded-xl border-2 flex items-center justify-center text-base font-extrabold transition-all active:scale-90 ml-1.5
+                                ${myAmt <= 0 ? 'opacity-25 cursor-not-allowed border-slate-300 dark:border-slate-700' :
+                                  myPaid ? 'bg-green-500 border-green-500 text-white shadow-sm' :
+                                  'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-transparent'}">
+                                ✔
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between p-2 rounded-xl border transition-all ${wifePaid ? 'paid-card-box' : 'bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200/70 dark:border-indigo-900/50'}">
+                            <div class="min-w-0 flex-1">
+                                <span class="block text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 opacity-85">Wife (RM)</span>
+                                <input type="number" step="0.01" inputmode="decimal" value="${wifeAmt.toFixed(2)}"
+                                    ${linked ? 'readonly onclick="switchTab(\'daycare\')"' : `onchange="updateCommAmount(${idx}, 'wife', this.value)" onblur="formatInput2Dec(this)"`}
+                                    class="w-full font-extrabold text-sm text-indigo-700 dark:text-indigo-300 bg-transparent focus:outline-none">
+                            </div>
+                            <button type="button" onclick="toggleCommPaid(${idx}, 'wife')" ${wifeAmt <= 0 ? 'disabled' : ''}
+                                class="w-10 h-10 shrink-0 rounded-xl border-2 flex items-center justify-center text-base font-extrabold transition-all active:scale-90 ml-1.5
+                                ${wifeAmt <= 0 ? 'opacity-25 cursor-not-allowed border-indigo-200 dark:border-indigo-900' :
+                                  wifePaid ? 'bg-green-500 border-green-500 text-white shadow-sm' :
+                                  'bg-white dark:bg-slate-900 border-indigo-300 dark:border-indigo-700 text-transparent'}">
+                                ✔
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderOtLogs() {
+            const container = document.getElementById('otListContainer');
+            container.innerHTML = '';
+
+            state.otLogs.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (state.otLogs.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Tiada rekod OT lagi. Tambah rekod di borang atas.</div>`;
+                return;
+            }
+
+            state.otLogs.forEach((log, idx) => {
+                const rowTotal = round2(round2(log.hours) * round2(state.otRate));
+                const card = document.createElement('div');
+                card.className = 'p-3.5 flex items-center justify-between gap-2.5';
+
+                card.innerHTML = `
+                    <div class="min-w-0 flex-1 space-y-1">
+                        <input type="date" value="${log.date}" onchange="editOtLog(${idx}, 'date', this.value)"
+                            class="w-full max-w-[145px] font-extrabold text-xs text-slate-800 dark:text-slate-100 bg-transparent focus:outline-none block">
+                        <input type="text" value="${escapeHtml(log.note || '')}" placeholder="Catatan" onchange="editOtLog(${idx}, 'note', this.value)"
+                            class="w-full text-[11px] text-slate-500 dark:text-slate-400 bg-transparent focus:outline-none block truncate">
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl px-2 py-1.5 border border-slate-200 dark:border-slate-700">
+                            <input type="number" step="0.01" inputmode="decimal" value="${round2(log.hours)}" onchange="editOtLog(${idx}, 'hours', this.value)"
+                                class="w-12 text-center font-extrabold text-xs text-emerald-600 dark:text-emerald-400 bg-transparent focus:outline-none">
+                            <span class="text-[10px] font-semibold text-slate-400">jam</span>
+                        </div>
+
+                        <div class="text-right min-w-[74px]">
+                            <span class="font-extrabold text-xs text-slate-900 dark:text-white">${formatRM(rowTotal)}</span>
+                        </div>
+
+                        <button type="button" onclick="deleteOtLog(${idx})" aria-label="Padam rekod OT" title="Padam Rekod OT"
+                            class="w-10 h-10 shrink-0 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-90 border-2 border-rose-400 text-white flex items-center justify-center shadow-md transition">
+                            <svg class="w-5 h-5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function updateSalaryInputs() {
+            state.income.basic = round2(document.getElementById('inputBasic').value);
+            state.income.incentive = round2(document.getElementById('inputIncentive').value);
+            recalculateAll();
+        }
+
+        function overrideOtMain(val) {
+            state.income.otManualOverride = round2(val);
+            recalculateAll();
+        }
+
+        function toggleBonusMode(checked) {
+            state.income.isBonusMonth = checked;
+            recalculateAll();
+        }
+
+        function togglePcbPanel() {
+            document.getElementById('pcbSettingsPanel').classList.toggle('hidden');
+        }
+
+        function togglePcbAuto(checked) {
+            state.tax.pcbAuto = checked;
+            recalculateAll();
+        }
+
+        function updatePcbConfig() {
+            state.tax.maritalStatus = document.getElementById('pcbMaritalStatus').value;
+            state.tax.children = Math.max(0, parseInt(document.getElementById('pcbChildren').value) || 0);
+            state.tax.pcbAuto = true;
+            document.getElementById('pcbAutoToggle').checked = true;
+            recalculateAll();
+        }
+
+        function overridePcb(val) {
+            state.tax.pcbAuto = false;
+            document.getElementById('pcbAutoToggle').checked = false;
+            state.tax.pcb = round2(val);
+            recalculateAll();
+        }
+
+        function updateTaxInputs() {
+            const enteredEpf = round2(document.getElementById('inputEpf').value);
+            if (state.income.isBonusMonth) {
+                const bonusEpf = round2(state.income.basic * 0.11);
+                state.tax.epf = Math.max(0, round2(enteredEpf - bonusEpf));
+            } else {
+                state.tax.epf = enteredEpf;
+            }
+            state.tax.socso = round2(document.getElementById('inputSocso').value);
+            state.tax.eis = round2(document.getElementById('inputEis').value);
+            recalculateAll();
+        }
+
+        function updateSavingInput() {
+            state.saving = round2(document.getElementById('inputSaving').value);
+            recalculateAll();
+        }
+
+        function toggleCommPaid(idx, who) {
+            if (who === 'my') {
+                state.commitments[idx].myPaid = !state.commitments[idx].myPaid;
+            } else {
+                state.commitments[idx].wifePaid = !state.commitments[idx].wifePaid;
+            }
+            recalculateAll();
+        }
+
+        function updateCommName(idx, val) {
+            if (val.trim()) {
+                state.commitments[idx].name = val.trim();
+                saveState(false);
+            }
+        }
+
+        function updateCommAmount(idx, who, val) {
+            const amount = round2(val);
+            if (who === 'my') {
+                state.commitments[idx].myAmount = amount;
+                if (amount <= 0) state.commitments[idx].myPaid = false;
+            } else {
+                state.commitments[idx].wifeAmount = amount;
+                if (amount <= 0) state.commitments[idx].wifePaid = false;
+            }
+            recalculateAll();
+        }
+
+        function deleteCommitment(idx) {
+            state.commitments.splice(idx, 1);
+            recalculateAll();
+        }
+
+        function openAddCommitmentModal() {
+            document.getElementById('addCommitmentModal').classList.remove('hidden');
+            document.getElementById('newCommName').focus();
+        }
+
+        function closeAddCommitmentModal() {
+            document.getElementById('addCommitmentModal').classList.add('hidden');
+        }
+
+        function saveNewCommitment(e) {
+            e.preventDefault();
+            const name = document.getElementById('newCommName').value.trim();
+            const myAmt = round2(document.getElementById('newCommMy').value);
+            const wifeAmt = round2(document.getElementById('newCommWife').value);
+
+            if (name) {
+                state.commitments.push({
+                    id: Date.now(),
+                    name,
+                    myAmount: myAmt,
+                    myPaid: false,
+                    wifeAmount: wifeAmt,
+                    wifePaid: false
+                });
+                document.getElementById('newCommName').value = '';
+                document.getElementById('newCommMy').value = '0.00';
+                document.getElementById('newCommWife').value = '0.00';
+                closeAddCommitmentModal();
+                recalculateAll();
+                showToast('Komitmen baru ditambah & disimpan!');
+            }
+        }
+
+        function updateOtRate() {
+            state.otRate = round2(document.getElementById('inputOtRate').value);
+            state.income.otManualOverride = null;
+            recalculateAll();
+        }
+
+        function addOtLog(e) {
+            e.preventDefault();
+            const date = document.getElementById('newOtDate').value;
+            const hours = round2(document.getElementById('newOtHours').value);
+            const note = document.getElementById('newOtNote').value.trim();
+
+            if (date && hours > 0) {
+                state.otLogs.push({
+                    id: Date.now(),
+                    date,
+                    hours,
+                    note: note || 'Normal OT'
+                });
+                state.income.otManualOverride = null;
+                document.getElementById('newOtHours').value = '';
+                document.getElementById('newOtNote').value = '';
+                recalculateAll();
+                showToast('Rekod OT ditambah & disimpan!');
+            }
+        }
+
+        function editOtLog(idx, field, val) {
+            if (field === 'hours') {
+                state.otLogs[idx].hours = Math.max(0, round2(val));
+            } else {
+                state.otLogs[idx][field] = val;
+            }
+            state.income.otManualOverride = null;
+            recalculateAll();
+        }
+
+        function deleteOtLog(idx) {
+            state.otLogs.splice(idx, 1);
+            state.income.otManualOverride = null;
+            recalculateAll();
+        }
+
+        function updateDcRates() {
+            state.daycare.normalRate = round2(document.getElementById('dcNormalRate').value);
+            state.daycare.normalQty = Math.max(0, round2(document.getElementById('dcNormalQty').value));
+            state.daycare.otRate = round2(document.getElementById('dcOtRate').value);
+            state.daycare.otQty = Math.max(0, round2(document.getElementById('dcOtQty').value));
+            recalculateAll();
+        }
+
+        function updateDcRefRates() {
+            state.daycare.refRate1 = round2(document.getElementById('dcRefRate1').value);
+            state.daycare.refRate2 = round2(document.getElementById('dcRefRate2').value);
+            saveState(false);
+        }
+
+        function stepDcQty(type, delta) {
+            if (type === 'normal') {
+                const next = Math.max(0, round2(round2(state.daycare.normalQty) + delta));
+                state.daycare.normalQty = next;
+                document.getElementById('dcNormalQty').value = next;
+            } else {
+                const next = Math.max(0, round2(round2(state.daycare.otQty) + delta));
+                state.daycare.otQty = next;
+                document.getElementById('dcOtQty').value = next;
+            }
+            recalculateAll();
+        }
+
+        function updateDcSplitMode(mode) {
+            state.daycare.splitMode = mode;
+            recalculateAll();
+        }
+
+        function switchTab(tab) {
+            const views = { main: 'viewMain', ot: 'viewOt', daycare: 'viewDaycare' };
+            const btns = { main: 'tabBtnMain', ot: 'tabBtnOt', daycare: 'tabBtnDaycare' };
+
+            Object.keys(views).forEach(k => {
+                const vEl = document.getElementById(views[k]);
+                const bEl = document.getElementById(btns[k]);
+                if (k === tab) {
+                    vEl.classList.remove('hidden');
+                    bEl.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-900', 'dark:text-white', 'shadow-sm', 'font-extrabold');
+                    bEl.classList.remove('text-slate-600', 'dark:text-slate-400', 'font-bold');
+                } else {
+                    vEl.classList.add('hidden');
+                    bEl.classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-900', 'dark:text-white', 'shadow-sm', 'font-extrabold');
+                    bEl.classList.add('text-slate-600', 'dark:text-slate-400', 'font-bold');
+                }
+            });
+        }
+
+        function openConfirmModal(type) {
+            const modal = document.getElementById('confirmModal');
+            const title = document.getElementById('confirmTitle');
+            const desc = document.getElementById('confirmDesc');
+            const btn = document.getElementById('confirmActionBtn');
+
+            if (type === 'month') {
+                title.textContent = 'Reset Semua Tick Bayaran?';
+                desc.textContent = 'Semua tanda hijau ✔ untuk Anda dan Wife akan dikosongkan untuk bulan baharu.';
+                btn.onclick = () => {
+                    state.commitments.forEach(c => { c.myPaid = false; c.wifePaid = false; });
+                    recalculateAll();
+                    closeConfirmModal();
+                    showToast('Semua tick dikosongkan!');
+                };
+            } else {
+                title.textContent = 'Reset Semua Data?';
+                desc.textContent = 'Semua angka, rekod OT dan komitmen akan dikembalikan kepada nilai asal.';
+                btn.onclick = () => {
+                    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+                    saveState(true);
+                    initApp();
+                    closeConfirmModal();
+                };
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        const themeToggle = document.getElementById('themeToggle');
+        if (storageAvailable && localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+        }
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            if (storageAvailable) {
+                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            }
+        });
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
